@@ -1,0 +1,21 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".../_version.py"
+
+jobs:
+  call-tests:
+    uses: ./.github/workflows/tests.yml
+
+  call-pypi:
+    needs: call-tests
+    uses: ./.github/workflows/pypi.yml
+    secrets:
+      TWINE_PASS: ${{ secrets.TWINE_PASS }}
+
+  call-release:
+    needs: call-pypi
+    uses: ./.github/workflows/release.yml

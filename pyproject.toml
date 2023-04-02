@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel>=0.33.4", "PyYaml>=5.4.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [""]
+
+[project]
+name = ""
+authors = [
+    { name = "Mart van Rijthoven", email = "mart.vanrijthoven@gmail.com" },
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/martvanrijthoven/"
+
+[tool.setuptools.dynamic]
+version = { attr = ".__version__" }
+
+[tool.ruff]
+ignore = [
+    'E501',
+    'F403',
+]
+line-length = 79
+select = [
+    'B',
+    'C',
+    'E',
+    'F',
+    'W',
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ['F401']
