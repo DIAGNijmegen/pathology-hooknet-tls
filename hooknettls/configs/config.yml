@@ -1,0 +1,97 @@
+default:
+  image_path: None
+  mask_path: None
+  output_folder: None
+  model_name: hooknet-tls
+  model_weights: /Users/mart/Desktop/phd/code/pathology-hooknet-tls/weights.h5
+
+  tls_filter_settings:
+    confidence_value: ...
+    confidence_count: ...
+  
+  gc_filter_settings:
+    confidence_value: ...
+    confidence_count: ...
+  
+  io_paths:
+    "*object": hooknettls.io.get_io_paths
+    image_path: ${image_path}
+    model_name: ${model_name}
+    output_folder: ${output_folder}
+  
+  patch_configuration:
+    "*object": wholeslidedata.iterators.PatchConfiguration
+    patch_shape: [1244, 1244, 3]
+    center: True
+    spacings: [0.5, 2.0]
+    overlap: [220, 220]
+
+  iterator:
+    "*object": wholeslidedata.iterators.create_patch_iterator
+    image_path: ${image_path}
+    mask_path: ${mask_path}
+    patch_configuration: ${patch_configuration}
+    cpus: 8
+    backend: openslide
+
+  model: 
+    "*object": hooknet.models.tensorflowmodel.HookNet
+    input_shape: [[1244,1244,3], [1244,1244,3]]
+    hook_indices@replace(true): [2, 4]
+    n_classes: 3
+    batch_norm: True
+    model_weights: ${model_weights}
+    n_filters: 32
+    activation:
+      "*object": tensorflow.keras.layers.LeakyReLU
+      alpha: 0.1
+  
+  execute_inference: 
+    "*object": hooknet.inference.apply.execute_inference
+    image_path: ${image_path}
+    model: ${model}
+    iterator: ${iterator}
+    model_name: ${model_name}
+    output_folder: ${output_folder}
+    tmp_folder: /tmp/
+    heatmaps: [1, 2]
+
+  annotations: 
+    "*object": hooknettls.postprocessing.convert_to_annotations
+    prediction_path: ${io_paths.prediction_path}
+
+  write_asap_annotation:
+    "*object": wholeslidedata.interoperability.asap.annotationwriter.write_asap_annotation
+    annotations: ${annotations}
+    output_path: ${io_paths.polygons_path}
+
+  json_data:
+    "*object": hooknettls.postprocessing.insert_confidence_map
+    raw_prediction_annotation_path: ${io_paths.polygons_path}
+    tls_heatmap_path: ${io_paths.tls_heatmap_path}
+    gc_heatmap_path: ${io_paths.gc_heatmap_path}
+    spacing: 0.5
+  
+  write_json_annotations:
+    "*object": wholeslidedata.annotation.utils.write_json_annotations
+    output_path: ${io_paths.polygons_with_confidence_path}
+    data: ${json_data}
+  
+  filter_tls_annotations:
+    "*object": hooknettls.postprocessing.tls_filtering
+    input_path: ${io_paths.polygons_with_confidence_path}
+    output_path: ${io_paths.tls_filtered_path}
+    filter_settings: ${tls_filter_settings}
+  
+  filter_gc_annotations:
+    "*object": hooknettls.postprocessing.gc_filtering
+    input_path: ${io_paths.polygons_with_confidence_path}
+    tls_input_path: ${io_paths.tls_filtered_path}
+    output_path: ${io_paths.gc_filtered_path}
+    filter_settings: ${gc_filter_settings}
+
+  combine_annotations:
+    "*object": hooknettls.postprocessing.combine_annotations
+    json1: ${io_paths.tls_filtered_path}
+    json2: ${io_paths.gc_filtered_path}
+    output_path: ${io_paths.filtered_path}
