@@ -13,11 +13,6 @@ default:
     confidence_value: ...
     confidence_count: ...
   
-  io_paths:
-    "*object": hooknettls.io.get_io_paths
-    image_path: ${image_path}
-    model_name: ${model_name}
-    output_folder: ${output_folder}
   
   patch_configuration:
     "*object": wholeslidedata.iterators.PatchConfiguration
@@ -55,6 +50,12 @@ default:
     output_folder: ${output_folder}
     tmp_folder: /tmp/
     heatmaps: [1, 2]
+
+  io_paths:
+    "*object": hooknettls.io.get_io_paths
+    image_path: ${image_path}
+    model_name: ${model_name}
+    output_folder: ${output_folder}
 
   annotations: 
     "*object": hooknettls.postprocessing.convert_to_annotations

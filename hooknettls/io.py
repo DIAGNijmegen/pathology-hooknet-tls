@@ -28,6 +28,7 @@ def get_io_paths(
     paths = {}
 
     image_name = Path(image_path).stem
+    output_folder = Path(output_folder)
     paths["prediction_path"] = output_folder / (image_name + model_name + ".tif")
     paths["tls_heatmap_path"] = output_folder / (image_name + model_name + "_heat1.tif")
     paths["gc_heatmap_path"] = output_folder / (image_name + model_name + "_heat2.tif")
