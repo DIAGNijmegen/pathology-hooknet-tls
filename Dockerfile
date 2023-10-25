@@ -1,40 +1,65 @@
-FROM nvidia/cuda:11.1.1-cudnn8-runtime-ubuntu20.04
+FROM doduo1.umcn.nl/uokbaseimage/base:tf2.5-pt1.9
 
-ENV TZ=Europe/Amsterdam
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN rm /etc/apt/sources.list.d/cuda.list && \
+    rm /etc/apt/sources.list.d/nvidia-ml.list && \
+    apt-key del 7fa2af80 && \
+    curl -L -O https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb && rm cuda-keyring_1.0-1_all.deb
 
+RUN apt-get update && apt-get -y install gcc && apt-get -y install curl  && apt-get -y install git
+RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
-# Install python3.8
-RUN : \
+RUN apt-get update \
+    && apt-get install -y -qq --no-install-recommends \
+        cmake \
+        dpkg-dev \
+        file \
+        g++ \
+        make \
+        qt5-default \
+        qtbase5-dev \
+        qttools5-dev \
+        libqt5opengl5-dev \
+        git \
+        libopencv-dev \
+        libdcmtk-dev \
+        libopenjp2-7-dev \
+        libopenslide-dev \
+        wget \
+        swig \
+        libunittest++-dev \
+        ca-certificates \
+        nano \
+        software-properties-common \
+        lsb-release \
+    && add-apt-repository ppa:ubuntu-toolchain-r/test \
     && apt-get update \
-    && apt-get install -y --no-install-recommends software-properties-common \
-    && add-apt-repository -y ppa:deadsnakes \
-    && apt-get install -y --no-install-recommends python3.8-venv \
-    && apt-get install libpython3.8-dev -y \
-    && apt-get clean \
-    && :
+    && apt-get install -y -qq --no-install-recommends \
+        g++-10 \
+        gcc-10 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 50 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 50
 
-# Add env to PATH
-RUN python3.8 -m venv /venv
-ENV PATH=/venv/bin:$PATH
 
 # Install ASAP
 RUN : \
     && apt-get update \
     && apt-get -y install curl \
-    && curl --remote-name --location "https://github.com/computationalpathologygroup/ASAP/releases/download/ASAP-2.1-(Nightly)/ASAP-2.1-Ubuntu2004.deb" \
-    && dpkg --install ASAP-2.1-Ubuntu2004.deb || true \
+    && curl --remote-name --location "https://github.com/computationalpathologygroup/ASAP/releases/download/ASAP-2.1-(Nightly)/ASAP-2.1-Ubuntu1804.deb" \
+    && dpkg --install ASAP-2.1-Ubuntu1804.deb || true \
     && apt-get -f install --fix-missing --fix-broken --assume-yes \
     && ldconfig -v \
     && apt-get clean \
-    && echo "/opt/ASAP/bin" > /venv/lib/python3.8/site-packages/asap.pth \
-    && rm ASAP-2.1-Ubuntu2004.deb \
+    && echo "/opt/ASAP/bin" > /usr/local/lib/python3.8/site-packages/asap.pth \
+    && rm ASAP-2.1-Ubuntu1804.deb \
     && :
 
-# Install git
-RUN apt-get install -y --no-install-recommends git
 
-# # Install algorithm
+ADD https://api.github.com/repos/DIAGNijmegen/pathology-whole-slide-data/git/refs/heads/main version.json
+RUN  pip3 install git+https://github.com/DIAGNijmegen/pathology-whole-slide-data.git@main
+ADD https://api.github.com/repos/DIAGNijmegen/pathology-hooknet/git/refs/heads/master version.json
+RUN  pip3 install git+https://github.com/DIAGNijmegen/pathology-hooknet.git@master
+
 COPY ./ /home/user/pathology-hooknet-tls/
 RUN : \
     && pip install wheel==0.37.0 \
@@ -42,13 +67,15 @@ RUN : \
     && rm -r /home/user/pathology-hooknet-tls \
     && :
 
-# Make user
-RUN groupadd -r user && useradd -r -g user user
-RUN chown user /home/user/
-RUN mkdir /output/
-RUN chown user /output/
+RUN mkdir -p /output/images/
+RUN mkdir -p /home/user/tmp/
+RUN mkdir -p /input/images
+
+COPY . /tmp/
+
+RUN chown --recursive user:user /home/user/
+RUN chown --recursive user:user /input/
+RUN chown --recursive user:user /output/
+
 USER user
 WORKDIR /home/user
-
-ENTRYPOINT ["python"]
-CMD ["-mhooknettls"]
