@@ -1,18 +1,19 @@
 default:
+
   image_path: None
   mask_path: None
-  output_folder: None
-  model_name: hooknet-tls
-  model_weights: /Users/mart/Desktop/phd/code/pathology-hooknet-tls/weights.h5
+  model_weights: None
 
+  model_name: hooknettls
+  output_folder: /output/images/
+  
   tls_filter_settings:
-    confidence_value: ...
-    confidence_count: ...
+    confidence_value: 210
+    confidence_count: 147
   
   gc_filter_settings:
-    confidence_value: ...
-    confidence_count: ...
-  
+    confidence_value: 245
+    confidence_count: 60
   
   patch_configuration:
     "*object": wholeslidedata.iterators.PatchConfiguration
@@ -20,6 +21,7 @@ default:
     center: True
     spacings: [0.5, 2.0]
     overlap: [220, 220]
+    offset: [-512, -512]
 
   iterator:
     "*object": wholeslidedata.iterators.create_patch_iterator
@@ -27,7 +29,7 @@ default:
     mask_path: ${mask_path}
     patch_configuration: ${patch_configuration}
     cpus: 8
-    backend: openslide
+    backend: asap
 
   model: 
     "*object": hooknet.models.tensorflowmodel.HookNet
@@ -48,7 +50,7 @@ default:
     iterator: ${iterator}
     model_name: ${model_name}
     output_folder: ${output_folder}
-    tmp_folder: /tmp/
+    tmp_folder: /home/user/tmp/
     heatmaps: [1, 2]
 
   io_paths:
@@ -59,7 +61,8 @@ default:
 
   annotations: 
     "*object": hooknettls.postprocessing.convert_to_annotations
-    prediction_path: ${io_paths.prediction_path}
+    prediction_mask_path: ${io_paths.prediction_path}
+    spacing: 4.0
 
   write_asap_annotation:
     "*object": wholeslidedata.interoperability.asap.annotationwriter.write_asap_annotation

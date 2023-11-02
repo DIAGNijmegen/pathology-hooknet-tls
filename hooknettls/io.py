@@ -29,9 +29,9 @@ def get_io_paths(
 
     image_name = Path(image_path).stem
     output_folder = Path(output_folder)
-    paths["prediction_path"] = output_folder / (image_name + model_name + ".tif")
-    paths["tls_heatmap_path"] = output_folder / (image_name + model_name + "_heat1.tif")
-    paths["gc_heatmap_path"] = output_folder / (image_name + model_name + "_heat2.tif")
+    paths["prediction_path"] = output_folder / f"{image_name}_{model_name}.tif"
+    paths["tls_heatmap_path"] = output_folder / f"{image_name}_{model_name}_heat1.tif"
+    paths["gc_heatmap_path"] = output_folder / f"{image_name}_{model_name}_heat2.tif"
 
     for path in paths.values():
         if not path.exists():

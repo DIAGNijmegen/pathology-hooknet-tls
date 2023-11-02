@@ -143,9 +143,9 @@ def filter_gc_annotations(
     multiplier=1,
 ):
     filtered_gc_annotations = []
-    tls_tree = STRtree(tls_annotations)
+    tls_tree = STRtree([annotation.geometry for annotation in tls_annotations])
     for gc_annotation in gc_annotations:
-        if not in_tls(tls_tree, gc_annotation):
+        if not in_tls(tls_tree, gc_annotation.geometry):
             continue
         pixels = sum(
             [
@@ -195,7 +195,7 @@ def insert_confidence_map(
     json_data = []
     for tls_annotation in tls_annotations:
         tls_json = tls_annotation.todict()
-        tls_heat_values = tls_heat_mask.get_annotation(tls_annotation, spacing=spacing)
+        tls_heat_values = tls_heat_mask.get_region_from_annotations([tls_annotation], spacing=spacing)
         tls_json["label"]["confidence_map"] = {
             int(key): int(value)
             for key, value in dict(
@@ -206,7 +206,7 @@ def insert_confidence_map(
 
     for gc_annotation in gc_annotations:
         gc_json = gc_annotation.todict()
-        gc_heat_values = gc_heat_mask.get_annotation(gc_annotation, spacing=spacing)
+        gc_heat_values = gc_heat_mask.get_region_from_annotations([gc_annotation], spacing=spacing)
         gc_json["label"]["confidence_map"] = {
             int(key): int(value)
             for key, value in dict(
