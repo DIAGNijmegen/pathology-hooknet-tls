@@ -98,4 +98,4 @@ default:
     "*object": hooknettls.postprocessing.combine_annotations
     json1: ${io_paths.tls_filtered_path}
     json2: ${io_paths.gc_filtered_path}
-    output_path: ${io_paths.filtered_path}
+    output_path: ${io_paths.post_processed_path}

@@ -62,9 +62,8 @@ RUN  pip3 install git+https://github.com/DIAGNijmegen/pathology-hooknet.git@mast
 
 COPY ./ /home/user/pathology-hooknet-tls/
 RUN : \
-    && pip install wheel==0.37.0 \
-    && pip install /home/user/pathology-hooknet-tls \
-    && rm -r /home/user/pathology-hooknet-tls \
+    && echo "/home/user/pathology-hooknet-tls/" > /usr/local/lib/python3.8/site-packages/hooknettls.pth \
+    && pip3 install numpy==1.23.5 scipy==1.8.0 \ 
     && :
 
 RUN mkdir -p /output/images/
@@ -77,5 +76,5 @@ RUN chown --recursive user:user /home/user/
 RUN chown --recursive user:user /input/
 RUN chown --recursive user:user /output/
 
-USER user
-WORKDIR /home/user
+# USER root
+# WORKDIR /home/user
