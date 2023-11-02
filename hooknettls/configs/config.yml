@@ -2,7 +2,7 @@ default:
 
   image_path: None
   mask_path: None
-  model_weights: None
+  model_weights: /home/user/pathology-hooknet-tls/weights.h5
 
   model_name: hooknettls
   output_folder: /output/images/
