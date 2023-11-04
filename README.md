@@ -41,8 +41,8 @@ python3 -m hooknettls \
 ### Related packages 
 HookNet-TLS uses the following packages
 
-- [WholeSlideData](wholeslidedata-link)
-- [HookNet](hooknet-link)
+- [WholeSlideData](https://github.com/DIAGNijmegen/pathology-whole-slide-data)
+- [HookNet](https://github.com/DIAGNijmegen/pathology-hooknet)
 
 
 ## Support 
