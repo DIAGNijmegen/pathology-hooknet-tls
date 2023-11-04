@@ -1,15 +1,6 @@
 
 # HookNet-TLS
 
-
-A cutting-edge deep learning solution for detecting Tertiary Lymphoid Structures and Germinal Centers in whole-slide images.
-
-
-
----
-
-## About HookNet-TLS
-
 HookNet-TLS is a deep learning algorithm designed to accurately detect Tertiary Lymphoid Structures (TLS) and Germinal Centers within whole-slide pathology images. Building on the foundation of the HookNet architecture, HookNet-TLS is a useful tool for pathologists and researchers examining Tertiary Lymphoid Structures (TLS) and Germinal Centers
 
 
