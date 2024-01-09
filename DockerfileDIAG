@@ -67,6 +67,7 @@ RUN : \
     && :
 
 RUN mkdir -p /output/images/
+RUN mkdir -p /output/images/tls-gc
 RUN mkdir -p /home/user/tmp/
 RUN mkdir -p /input/images
 
@@ -75,3 +76,6 @@ COPY . /tmp/
 RUN chown --recursive user:user /home/user/
 RUN chown --recursive user:user /input/
 RUN chown --recursive user:user /output/
+
+USER user
+WORKDIR /home/user
