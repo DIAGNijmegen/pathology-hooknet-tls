@@ -84,7 +84,7 @@ def convert_polygons_to_annotations(polygons):
             )
 
             if isinstance(p, MultiPolygon):
-                polygons = list(p)
+                polygons = list(p.geoms)
             else:
                 polygons = [p]
 
@@ -125,14 +125,13 @@ def filter_tls_annotations(
     return filtered_tls_annotations
 
 
-def in_tls(tls_tree, gc_annotation: Annotation):
-    tls_annotations: list[Annotation] = tls_tree.query(gc_annotation)
+def in_tls(tls_tree, gc_geom: ShapelyPolygon):
+    tls_annotations: list[ShapelyPolygon] = tls_tree.query(gc_geom)
     for tls_annotation in tls_annotations:
         tls_box = box(*tls_annotation.bounds)
-        if (gc_annotation.intersection(tls_box).area / gc_annotation.area) >= 0.5:
+        if (gc_geom.intersection(tls_box).area / gc_geom.area) >= 0.5:
             return True
     return False
-
 
 def filter_gc_annotations(
     tls_annotations,
