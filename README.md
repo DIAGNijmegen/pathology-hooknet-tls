@@ -35,6 +35,12 @@ HookNet-TLS uses the following packages
 - [WholeSlideData](https://github.com/DIAGNijmegen/pathology-whole-slide-data)
 - [HookNet](https://github.com/DIAGNijmegen/pathology-hooknet)
 
+### Data
+- HookNet-TLS Weights: https://zenodo.org/records/10614942
+- HookNet-TLS Annotations: https://zenodo.org/records/10614928
+- HookNet-TLS Annotations Masks: https://zenodo.org/records/10635034
+
+
 
 ## Support 
 
