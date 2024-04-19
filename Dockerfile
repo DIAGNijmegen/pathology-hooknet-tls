@@ -27,7 +27,7 @@ RUN  pip install git+https://github.com/DIAGNijmegen/pathology-hooknet.git@maste
 COPY ./ /home/user/pathology-hooknet-tls/
 RUN : \
     && echo "/home/user/pathology-hooknet-tls/" > /usr/local/lib/python3.8/dist-packages/hooknettls.pth \
-    && pip install numpy==1.23.5 scipy==1.8.0 \ 
+    && pip install numpy==1.23.5 scipy==1.8.0 shapely==1.8.4 \ 
     && :
 
 RUN mkdir -p /output/images/
