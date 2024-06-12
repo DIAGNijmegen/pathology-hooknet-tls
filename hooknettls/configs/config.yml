@@ -100,7 +100,7 @@ default:
     json2: ${io_paths.gc_filtered_path}
     output_path: ${io_paths.post_processed_path}
     
-  save_to_gc_outputs:
-    "*object": hooknettls.gc.save_to_gc_outputs
-    image_path: ${image_path}
-    post_processed_path: ${io_paths.post_processed_path}
+  # save_to_gc_outputs:
+  #   "*object": hooknettls.gc.save_to_gc_outputs
+  #   image_path: ${image_path}
+  #   post_processed_path: ${io_paths.post_processed_path}
