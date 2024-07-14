@@ -26,9 +26,15 @@ docker build -t hooknet-tls .
 
 ### Usage
 
+
+
 <blockquote style="color: #8a6d3b; background-color: #fcf8e3; border-left: 2px solid #faebcc;">
   <p><strong>Note.</strong> The algorithm expects that the input whole-slide-image contains the spacing corresponding to approximately 0.5µm and 2.0µm.</p>
 </blockquote>
+
+```bash
+docker run -it -v /output/:/output/ hooknet-tls /bin/bash
+```
 
 ```bash
 python3 -m hooknettls \
