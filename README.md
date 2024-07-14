@@ -9,11 +9,18 @@ HookNet-TLS is a deep learning algorithm designed to accurately detect Tertiary 
 
 ### Installation
 
-Ensure you have Docker installed and running on your system. Clone this repository and build the Docker image:
+Ensure you have Docker installed and running on your system. 
+
+- Clone this repository
+- Download the weights [here](https://zenodo.org/records/10614942) and put them in the repository folder.
+- Build the Docker image
+
+E.g.,
 
 ```bash
 git clone https://github.com/DIAGNijmegen/pathology-hooknet-tls.git
 cd hooknet-tls
+wget https://zenodo.org/records/10614942/files/weights.h5
 docker build -t hooknet-tls .
 ```
 
