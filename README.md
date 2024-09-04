@@ -9,6 +9,10 @@ HookNet-TLS is a deep learning algorithm designed to accurately detect Tertiary 
 
 ### Installation
 
+❗ this algorithm requires openslide==3.4.1
+
+
+
 Ensure you have Docker installed and running on your system. 
 
 - Clone this repository
