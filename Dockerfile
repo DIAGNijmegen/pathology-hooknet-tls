@@ -20,7 +20,7 @@ RUN : \
 RUN apt-get install git --assume-yes
 
 ADD https://api.github.com/repos/DIAGNijmegen/pathology-whole-slide-data/git/refs/heads/main version.json
-RUN  pip install git+https://github.com/DIAGNijmegen/pathology-whole-slide-data.git@main
+RUN  pip install git+https://github.com/DIAGNijmegen/pathology-whole-slide-data.git@78dd18b
 ADD https://api.github.com/repos/DIAGNijmegen/pathology-hooknet/git/refs/heads/master version.json
 RUN  pip install git+https://github.com/DIAGNijmegen/pathology-hooknet.git@master
 
