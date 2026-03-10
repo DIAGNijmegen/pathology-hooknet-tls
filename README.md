@@ -11,8 +11,6 @@ HookNet-TLS is a deep learning algorithm designed to accurately detect Tertiary 
 
 ❗ this algorithm requires openslide==3.4.1
 
-
-
 Ensure you have Docker installed and running on your system. 
 
 - Clone this repository
@@ -28,8 +26,37 @@ wget https://zenodo.org/records/10614942/files/weights.h5
 docker build -t hooknet-tls .
 ```
 
+
+## Preprocessing
+
+Before running HookNet-TLS, your whole-slide image must be converted to a dense pyramid TIF and a tissue-background mask must be created. A dedicated Docker image is provided for this in the `preprocessing/` folder.
+
+### Build
+
+```bash
+docker build -t preprocessing preprocessing/
+```
+
 ### Usage
 
+```bash
+docker run --rm \
+  -v /path/to/input:/input \
+  -v /path/to/output:/output \
+  preprocessing \
+  /input/<slide>.svs \
+  /output/<slide>.tif \
+  /output/<slide>_mask.tif
+```
+
+This runs two steps in sequence:
+1. **Convert WSI** — extracts the image at level 1 from the SVS and saves it as a tiled pyramid TIF using ASAP (`saveatlevel.py`)
+2. **Create mask** — computes a tissue-background mask via Otsu thresholding + morphological cleanup and saves it as a pyramid TIF (`createmask.py`)
+
+The resulting `<slide>.tif` and `<slide>_mask.tif` are the inputs expected by the HookNet-TLS algorithm.
+
+
+## Usage
 
 
 <blockquote style="color: #8a6d3b; background-color: #fcf8e3; border-left: 2px solid #faebcc;">
@@ -45,6 +72,7 @@ python3 -m hooknettls \
     hooknettls.default.image_path=/tmp/TCGA-21-5784-01Z-00-DX1.tif \
     hooknettls.default.mask_path=/tmp/TCGA-21-5784-01Z-00-DX1_tb_mask.tif
 ```
+
 
 ### Related packages 
 HookNet-TLS uses the following packages
