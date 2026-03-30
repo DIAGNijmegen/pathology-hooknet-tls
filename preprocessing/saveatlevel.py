@@ -1,5 +1,6 @@
 """
-Minimal standalone script to save image at level 0, then level 1.
+Optimized script to save WSI at ~0.5 mpp spacing.
+Intelligently selects direct extraction or two-step approach.
 Only requires ASAP's multiresolutionimageinterface.
 """
 
@@ -9,6 +10,27 @@ import argparse
 import os
 import sys
 import tempfile
+
+
+def find_best_level(image, target_spacing, base_spacing, tolerance=0.02):
+    """
+    Find the level closest to target_spacing.
+    Returns (level_index, actual_spacing, within_tolerance)
+    """
+    best_level = 0
+    best_diff = float("inf")
+    best_spacing = None
+
+    for level in range(image.getNumberOfLevels()):
+        level_spacing = base_spacing * image.getLevelDownsample(level)
+        diff = abs(level_spacing - target_spacing)
+        if diff < best_diff:
+            best_diff = diff
+            best_level = level
+            best_spacing = level_spacing
+
+    within_tolerance = best_diff <= tolerance
+    return best_level, best_spacing, within_tolerance
 
 
 def save_level(input_path, output_path, level, tile_size=512, jpeg_quality=80):
@@ -74,10 +96,23 @@ def save_level(input_path, output_path, level, tile_size=512, jpeg_quality=80):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Save level 0, then extract final level from that output")
+    parser = argparse.ArgumentParser(
+        description="Save WSI at ~0.5 mpp. Uses direct extraction if available, otherwise two-step approach."
+    )
     parser.add_argument("-i", "--input", required=True, help="Input image path")
     parser.add_argument("-o", "--output", required=True, help="Output image path")
-    parser.add_argument("-l", "--level", type=int, default=1, help="Final level to extract (default: 1)")
+    parser.add_argument(
+        "--target-spacing",
+        type=float,
+        default=0.5,
+        help="Target spacing/mpp (default: 0.5)",
+    )
+    parser.add_argument(
+        "--tolerance",
+        type=float,
+        default=0.02,
+        help="Tolerance for direct extraction (default: 0.02, i.e., 0.48-0.52 for target 0.5)",
+    )
     parser.add_argument("-q", "--quality", type=int, default=90, help="JPEG quality (1-100)")
     parser.add_argument("-t", "--tile-size", type=int, default=512, help="Tile size")
     parser.add_argument("-w", "--overwrite", action="store_true", help="Overwrite existing")
@@ -93,21 +128,92 @@ def main():
         print(f"Error: Output exists: {args.output}. Use -w to overwrite.")
         return 1
 
-    # Intermediate file path
-    basename = os.path.splitext(os.path.basename(args.input))[0]
-    intermediate = os.path.join(tempfile.gettempdir(), f"{basename}_level0_tmp.tif")
+    # Open input to analyze levels
+    reader = mir.MultiResolutionImageReader()
+    image = reader.open(args.input)
+    if image is None:
+        print(f"Error: Failed to open: {args.input}")
+        return 1
 
-    print(f"Step 1: Extract level 0 -> intermediate")
-    save_level(args.input, intermediate, level=0, tile_size=args.tile_size, jpeg_quality=args.quality)
+    spacing = image.getSpacing()
+    if not spacing or spacing[0] == 0:
+        print("Error: Image has no spacing/mpp metadata.")
+        return 1
 
-    print(f"Step 2: Extract level {args.level} from intermediate -> output")
-    save_level(intermediate, args.output, level=args.level, tile_size=args.tile_size, jpeg_quality=args.quality)
+    base_spacing = spacing[0]
+    num_levels = image.getNumberOfLevels()
 
-    if not args.keep_intermediate:
-        os.remove(intermediate)
-        print(f"Cleaned up: {intermediate}")
+    print(f"Input: {args.input}")
+    print(f"Base spacing: {base_spacing:.4f} mpp")
+    print(f"Number of levels: {num_levels}")
+    print(f"Target spacing: {args.target_spacing} ± {args.tolerance} mpp")
+    print()
+
+    # Print all available levels
+    print("Available levels:")
+    for level in range(num_levels):
+        level_spacing = base_spacing * image.getLevelDownsample(level)
+        dims = image.getLevelDimensions(level)
+        print(f"  Level {level}: {dims[0]}x{dims[1]}, spacing={level_spacing:.4f} mpp")
+    print()
+
+    # Find best level for target spacing
+    best_level, actual_spacing, within_tolerance = find_best_level(
+        image, args.target_spacing, base_spacing, args.tolerance
+    )
+
+    if within_tolerance:
+        # Direct extraction
+        print(f"✓ Direct extraction: Level {best_level} (spacing={actual_spacing:.4f} mpp) is within tolerance")
+        print(f"Extracting level {best_level} -> {args.output}")
+        save_level(args.input, args.output, level=best_level, tile_size=args.tile_size, jpeg_quality=args.quality)
     else:
-        print(f"Kept intermediate: {intermediate}")
+        # Two-step approach: extract level 0, then extract target from its pyramid
+        print(f"✗ No level within tolerance. Using two-step approach.")
+
+        # Level 0 always has base spacing
+        intermediate_level = 0
+        intermediate_spacing = base_spacing
+
+        print(f"Step 1: Extract level {intermediate_level} (spacing={intermediate_spacing:.4f} mpp) -> intermediate")
+
+        basename = os.path.splitext(os.path.basename(args.input))[0]
+        intermediate = os.path.join(tempfile.gettempdir(), f"{basename}_level{intermediate_level}_tmp.tif")
+
+        save_level(
+            args.input,
+            intermediate,
+            level=intermediate_level,
+            tile_size=args.tile_size,
+            jpeg_quality=args.quality,
+        )
+
+        # Open intermediate and find level for target spacing
+        reader2 = mir.MultiResolutionImageReader()
+        image2 = reader2.open(intermediate)
+        if image2 is None:
+            print(f"Error: Failed to open intermediate: {intermediate}")
+            return 1
+
+        intermediate_base_spacing = image2.getSpacing()[0]
+        final_level, final_spacing, _ = find_best_level(
+            image2, args.target_spacing, intermediate_base_spacing, tolerance=float('inf')
+        )
+
+        print(f"Step 2: Extract level {final_level} (spacing={final_spacing:.4f} mpp) from intermediate -> output")
+        save_level(
+            intermediate,
+            args.output,
+            level=final_level,
+            tile_size=args.tile_size,
+            jpeg_quality=args.quality,
+        )
+
+        if not args.keep_intermediate:
+            os.remove(intermediate)
+            print(f"Cleaned up: {intermediate}")
+        else:
+            print(f"Kept intermediate: {intermediate}")
 
     print(f"Done: {args.output}")
     return 0
